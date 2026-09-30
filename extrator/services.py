@@ -107,28 +107,42 @@ IMPORTANTE:
 
     modelos_candidatos = [
         'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
         'gemini-2.0-flash',
+        'gemini-2.0-flash-lite',
         'gemini-1.5-flash',
-        'gemini-3.8-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-2.5-pro',
+        'gemini-1.5-pro',
     ]
 
     response = None
     ultimo_erro = None
 
+    config = types.GenerateContentConfig(
+        response_mime_type="application/json",
+        temperature=0.1,
+    )
+
     for modelo in modelos_candidatos:
-        try:
-            response = client.models.generate_content(
-                model=modelo,
-                contents=[
-                    prompt,
-                    pdf_part
-                ]
-            )
-            if response and response.text:
-                break
-        except Exception as e:
-            ultimo_erro = e
-            continue
+        for tentativa in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=modelo,
+                    contents=[
+                        prompt,
+                        pdf_part
+                    ],
+                    config=config
+                )
+                if response and response.text:
+                    break
+            except Exception as e:
+                ultimo_erro = e
+                import time
+                time.sleep(1)
+        if response and response.text:
+            break
 
     if not response or not response.text:
         raise ValueError(f'Não foi possível obter resposta dos modelos do Gemini. Erro: {ultimo_erro}')
