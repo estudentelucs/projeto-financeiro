@@ -105,13 +105,33 @@ IMPORTANTE:
         mime_type='application/pdf'
     )
 
-    response = client.models.generate_content(
-        model='gemini-3.8-flash',
-        contents=[
-            prompt,
-            pdf_part
-        ]
-    )
+    modelos_candidatos = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-3.8-flash',
+    ]
+
+    response = None
+    ultimo_erro = None
+
+    for modelo in modelos_candidatos:
+        try:
+            response = client.models.generate_content(
+                model=modelo,
+                contents=[
+                    prompt,
+                    pdf_part
+                ]
+            )
+            if response and response.text:
+                break
+        except Exception as e:
+            ultimo_erro = e
+            continue
+
+    if not response or not response.text:
+        raise ValueError(f'Não foi possível obter resposta dos modelos do Gemini. Erro: {ultimo_erro}')
 
     texto_resposta = response.text.strip()
 
