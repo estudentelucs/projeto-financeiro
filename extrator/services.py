@@ -105,19 +105,29 @@ IMPORTANTE:
         mime_type='application/pdf'
     )
 
-    modelos_candidatos = [
-        'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
-        'gemini-2.0-flash',
-        'gemini-2.0-flash-lite',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-8b',
-        'gemini-2.5-pro',
-        'gemini-1.5-pro',
-    ]
+    # Obter lista de modelos válidos diretamente da API do Gemini
+    modelos_disponiveis = []
+    try:
+        for m in client.models.list():
+            nome = getattr(m, 'name', '') or ''
+            # Filtrar modelos Gemini que suportam geração de conteúdo
+            if 'gemini' in nome.lower() and ('flash' in nome.lower() or 'pro' in nome.lower()):
+                modelos_disponiveis.append(nome)
+    except Exception:
+        pass
+
+    # Fallback se a listagem não retornar
+    if not modelos_disponiveis:
+        modelos_disponiveis = ['gemini-2.5-flash', 'gemini-2.0-flash']
+
+    # Priorizar modelos Flash
+    modelos_candidatos = sorted(
+        modelos_disponiveis,
+        key=lambda x: (0 if '2.5-flash' in x else (1 if '2.0-flash' in x else (2 if 'flash' in x else 3)))
+    )
 
     response = None
-    ultimo_erro = None
+    erros_ocorridos = []
 
     config = types.GenerateContentConfig(
         response_mime_type="application/json",
@@ -125,27 +135,24 @@ IMPORTANTE:
     )
 
     for modelo in modelos_candidatos:
-        for tentativa in range(2):
-            try:
-                response = client.models.generate_content(
-                    model=modelo,
-                    contents=[
-                        prompt,
-                        pdf_part
-                    ],
-                    config=config
-                )
-                if response and response.text:
-                    break
-            except Exception as e:
-                ultimo_erro = e
-                import time
-                time.sleep(1)
-        if response and response.text:
-            break
+        try:
+            response = client.models.generate_content(
+                model=modelo,
+                contents=[
+                    prompt,
+                    pdf_part
+                ],
+                config=config
+            )
+            if response and response.text:
+                break
+        except Exception as e:
+            erros_ocorridos.append(f'{modelo}: {str(e)}')
+            import time
+            time.sleep(0.5)
 
     if not response or not response.text:
-        raise ValueError(f'Não foi possível obter resposta dos modelos do Gemini. Erro: {ultimo_erro}')
+        raise ValueError(f'Não foi possível extrair os dados. Detalhes: {erros_ocorridos[-1] if erros_ocorridos else "Sem resposta"}')
 
     texto_resposta = response.text.strip()
 
