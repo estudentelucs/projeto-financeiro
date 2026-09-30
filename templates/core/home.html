@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Início - Sistema Administrativo-Financeiro{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h2 class="fw-bold" style="color: var(--primary-color);">Sistema Administrativo-Financeiro</h2>
+    <p class="text-muted">Gerencie fornecedores, clientes, contas a pagar e receber</p>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4">
+            <div class="card-body">
+                <i class="bi bi-file-earmark-pdf" style="font-size: 3rem; color: var(--accent-color);"></i>
+                <h5 class="card-title mt-3">Extrator de Notas Fiscais</h5>
+                <p class="card-text text-muted">Carregue um PDF de nota fiscal e extraia dados automaticamente usando inteligência artificial (Gemini).</p>
+                <a href="/extrator/" class="btn btn-primary">
+                    <i class="bi bi-arrow-right"></i> Acessar Extrator
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4">
+            <div class="card-body">
+                <i class="bi bi-people" style="font-size: 3rem; color: #28a745;"></i>
+                <h5 class="card-title mt-3">Cadastros</h5>
+                <p class="card-text text-muted">Gerencie fornecedores, clientes, faturados, tipos de receita e despesa.</p>
+                <span class="badge bg-warning text-dark">Em breve - 2ª Etapa</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4">
+            <div class="card-body">
+                <i class="bi bi-cash-stack" style="font-size: 3rem; color: #dc3545;"></i>
+                <h5 class="card-title mt-3">Contas</h5>
+                <p class="card-text text-muted">Registre e acompanhe contas a pagar e contas a receber com parcelas.</p>
+                <span class="badge bg-warning text-dark">Em breve - 2ª Etapa</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

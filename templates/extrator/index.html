@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+
+{% block title %}Extração de Dados de Nota Fiscal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-area {
+        border: 2px dashed #ccc;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        background: #fafbfc;
+    }
+    .upload-area:hover,
+    .upload-area.dragover {
+        border-color: var(--accent-color);
+        background: #eef5fc;
+    }
+    .upload-area.has-file {
+        border-color: #28a745;
+        background: #f0fff4;
+    }
+    .upload-icon {
+        font-size: 2.5rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    .upload-area.has-file .upload-icon {
+        color: #28a745;
+    }
+    .file-info {
+        display: none;
+        margin-top: 15px;
+        padding: 12px 16px;
+        background: #e8f5e9;
+        border-radius: 8px;
+        border: 1px solid #c8e6c9;
+    }
+    .file-info.visible {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .file-info .file-name {
+        font-weight: 600;
+        color: #2e7d32;
+    }
+    .file-info .file-size {
+        color: #666;
+        font-size: 0.85rem;
+    }
+    .file-info .btn-remove {
+        color: #dc3545;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: 1.1rem;
+    }
+    .json-output {
+        background: #1e1e2e;
+        color: #a6e3a1;
+        border-radius: 8px;
+        padding: 20px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        max-height: 500px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .json-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .json-header h6 {
+        margin: 0;
+        color: #333;
+    }
+    .btn-copy {
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-copy:hover {
+        background: #f0f0f0;
+    }
+    .btn-copy.copied {
+        background: #28a745;
+        color: white;
+        border-color: #28a745;
+    }
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    .loading-overlay.visible {
+        display: flex;
+    }
+    .loading-box {
+        background: white;
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    .loading-box .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        color: var(--accent-color);
+    }
+    .loading-box p {
+        margin-top: 15px;
+        font-weight: 600;
+        color: #333;
+    }
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        padding: 20px;
+        background: white;
+    }
+    .nav-tabs .nav-link {
+        font-weight: 600;
+        color: #555;
+    }
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+    }
+    .alert-erro {
+        display: none;
+    }
+    .alert-erro.visible {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4><i class="bi bi-file-earmark-text"></i> Extração de Dados de Nota Fiscal</h4>
+                <p>Carregue um PDF de nota fiscal e extraia os dados automaticamente usando IA</p>
+            </div>
+            <div class="card-body p-4">
+                <!-- Upload Area -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-upload"></i> Upload do PDF
+                    </label>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </div>
+                        <p class="mb-1 fw-bold">Selecione o arquivo PDF da nota fiscal</p>
+                        <p class="text-muted small">Escolher arquivo. Nenhum arquivo escolhido</p>
+                    </div>
+                    <input type="file" id="inputPdf" accept=".pdf" class="d-none">
+                </div>
+
+                <!-- File Info -->
+                <div class="file-info" id="fileInfo">
+                    <div>
+                        <i class="bi bi-file-earmark-pdf-fill text-success me-2" style="font-size:1.3rem;"></i>
+                        <span class="file-name" id="fileName"></span>
+                        <span class="file-size ms-2" id="fileSize"></span>
+                    </div>
+                    <button type="button" class="btn-remove" id="btnRemove" title="Remover arquivo">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+
+                <!-- Extract Button -->
+                <button type="button" class="btn btn-primary w-100 mt-3" id="btnExtrair" disabled>
+                    <i class="bi bi-cpu"></i> EXTRAIR DADOS
+                </button>
+
+                <!-- Error Alert -->
+                <div class="alert alert-danger alert-erro mt-3" id="alertErro">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span id="erroMsg"></span>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultados" style="display:none;" class="mt-4">
+                    <hr>
+                    <h5 class="mb-3"><i class="bi bi-check-circle text-success"></i> Dados Extraidos</h5>
+
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs" id="resultTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link" id="tab-formatted" data-bs-toggle="tab" href="#formatted" role="tab">Visualizacao Formatada</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" id="tab-json" data-bs-toggle="tab" href="#jsonTab" role="tab">JSON</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="resultTabContent">
+                        <!-- Formatted View -->
+                        <div class="tab-pane fade" id="formatted" role="tabpanel">
+                            <div id="dadosFormatados"></div>
+                        </div>
+                        <!-- JSON View -->
+                        <div class="tab-pane fade show active" id="jsonTab" role="tabpanel">
+                            <div class="json-header">
+                                <h6><i class="bi bi-braces"></i> Dados em JSON</h6>
+                                <button type="button" class="btn-copy" id="btnCopy">
+                                    <i class="bi bi-clipboard"></i> Copiar JSON
+                                </button>
+                            </div>
+                            <div class="json-output" id="jsonOutput"></div>
+                            <p class="text-muted small mt-2"><i class="bi bi-info-circle"></i> Este JSON contem os dados extraidos da nota fiscal e pode ser usado para integracao com outros sistemas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p>Processando nota fiscal com IA...<br><small class="text-muted">Isso pode levar alguns segundos</small></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var uploadArea = document.getElementById('uploadArea');
+    var inputPdf = document.getElementById('inputPdf');
+    var fileInfo = document.getElementById('fileInfo');
+    var fileNameEl = document.getElementById('fileName');
+    var fileSizeEl = document.getElementById('fileSize');
+    var btnRemove = document.getElementById('btnRemove');
+    var btnExtrair = document.getElementById('btnExtrair');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    var alertErro = document.getElementById('alertErro');
+    var erroMsg = document.getElementById('erroMsg');
+    var resultados = document.getElementById('resultados');
+    var jsonOutput = document.getElementById('jsonOutput');
+    var dadosFormatados = document.getElementById('dadosFormatados');
+    var btnCopy = document.getElementById('btnCopy');
+
+    var arquivoSelecionado = null;
+    var dadosJson = null;
+
+    // Click to upload
+    uploadArea.addEventListener('click', function() { inputPdf.click(); });
+
+    // Drag and Drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function() {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        var files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type === 'application/pdf') {
+            selecionarArquivo(files[0]);
+        }
+    });
+
+    // File input change
+    inputPdf.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            selecionarArquivo(e.target.files[0]);
+        }
+    });
+
+    function selecionarArquivo(arquivo) {
+        arquivoSelecionado = arquivo;
+        fileNameEl.textContent = arquivo.name;
+        fileSizeEl.textContent = formatarTamanho(arquivo.size);
+        fileInfo.classList.add('visible');
+        uploadArea.classList.add('has-file');
+        btnExtrair.disabled = false;
+        esconderErro();
+        esconderResultados();
+    }
+
+    function formatarTamanho(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // Remove file
+    btnRemove.addEventListener('click', function(e) {
+        e.stopPropagation();
+        arquivoSelecionado = null;
+        inputPdf.value = '';
+        fileInfo.classList.remove('visible');
+        uploadArea.classList.remove('has-file');
+        btnExtrair.disabled = true;
+        esconderResultados();
+    });
+
+    // Extract data
+    btnExtrair.addEventListener('click', function() {
+        if (!arquivoSelecionado) return;
+
+        esconderErro();
+        esconderResultados();
+        mostrarLoading();
+
+        var formData = new FormData();
+        formData.append('arquivo_pdf', arquivoSelecionado);
+
+        fetch('/extrator/processar/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(response) {
+            return response.json().then(function(data) {
+                if (!response.ok) {
+                    throw new Error(data.erro || 'Erro ao processar o arquivo.');
+                }
+                return data;
+            });
+        })
+        .then(function(data) {
+            dadosJson = data.dados;
+            exibirResultados(data.dados);
+        })
+        .catch(function(error) {
+            mostrarErro(error.message);
+        })
+        .finally(function() {
+            esconderLoading();
+        });
+    });
+
+    function mostrarLoading() {
+        loadingOverlay.classList.add('visible');
+    }
+
+    function esconderLoading() {
+        loadingOverlay.classList.remove('visible');
+    }
+
+    function mostrarErro(msg) {
+        erroMsg.textContent = msg;
+        alertErro.classList.add('visible');
+    }
+
+    function esconderErro() {
+        alertErro.classList.remove('visible');
+    }
+
+    function esconderResultados() {
+        resultados.style.display = 'none';
+    }
+
+    function exibirResultados(dados) {
+        // JSON tab
+        jsonOutput.textContent = JSON.stringify(dados, null, 2);
+
+        // Formatted tab
+        var html = '';
+
+        // Fornecedor
+        if (dados.fornecedor) {
+            html += '<div class="card mb-3">';
+            html += '<div class="card-header py-2" style="background: #e3f2fd; color: #1565c0;">';
+            html += '<strong><i class="bi bi-building"></i> Fornecedor</strong></div>';
+            html += '<div class="card-body p-3"><table class="table table-sm mb-0">';
+            html += '<tr><td class="fw-bold" style="width:40%">Razao Social</td><td>' + (dados.fornecedor.razao_social || '-') + '</td></tr>';
+            html += '<tr><td class="fw-bold">Nome Fantasia</td><td>' + (dados.fornecedor.nome_fantasia || '-') + '</td></tr>';
+            html += '<tr><td class="fw-bold">CNPJ</td><td>' + (dados.fornecedor.cnpj || '-') + '</td></tr>';
+            html += '</table></div></div>';
+        }
+
+        // Faturado
+        if (dados.faturado) {
+            html += '<div class="card mb-3">';
+            html += '<div class="card-header py-2" style="background: #e8f5e9; color: #2e7d32;">';
+            html += '<strong><i class="bi bi-person"></i> Faturado</strong></div>';
+            html += '<div class="card-body p-3"><table class="table table-sm mb-0">';
+            html += '<tr><td class="fw-bold" style="width:40%">Nome Completo</td><td>' + (dados.faturado.nome_completo || '-') + '</td></tr>';
+            html += '<tr><td class="fw-bold">CPF</td><td>' + (dados.faturado.cpf || '-') + '</td></tr>';
+            html += '</table></div></div>';
+        }
+
+        // Nota Fiscal Details
+        html += '<div class="card mb-3">';
+        html += '<div class="card-header py-2" style="background: #fff3e0; color: #e65100;">';
+        html += '<strong><i class="bi bi-receipt"></i> Dados da Nota Fiscal</strong></div>';
+        html += '<div class="card-body p-3"><table class="table table-sm mb-0">';
+        html += '<tr><td class="fw-bold" style="width:40%">Numero NF</td><td>' + (dados.numero_nota_fiscal || '-') + '</td></tr>';
+        html += '<tr><td class="fw-bold">Data de Emissao</td><td>' + formatarData(dados.data_emissao) + '</td></tr>';
+        html += '<tr><td class="fw-bold">Valor Total</td><td><strong class="text-success">R$ ' + formatarMoeda(dados.valor_total) + '</strong></td></tr>';
+        html += '<tr><td class="fw-bold">Qtd. Parcelas</td><td>' + (dados.quantidade_parcelas || 1) + '</td></tr>';
+        html += '</table></div></div>';
+
+        // Produtos
+        if (dados.descricao_produtos) {
+            html += '<div class="card mb-3">';
+            html += '<div class="card-header py-2" style="background: #f3e5f5; color: #6a1b9a;">';
+            html += '<strong><i class="bi bi-box"></i> Descricao dos Produtos</strong></div>';
+            html += '<div class="card-body p-3"><p class="mb-0">' + dados.descricao_produtos + '</p></div></div>';
+        }
+
+        // Parcelas
+        if (dados.parcelas && dados.parcelas.length > 0) {
+            html += '<div class="card mb-3">';
+            html += '<div class="card-header py-2" style="background: #e0f7fa; color: #00695c;">';
+            html += '<strong><i class="bi bi-calendar-check"></i> Parcelas</strong></div>';
+            html += '<div class="card-body p-3"><table class="table table-sm table-striped mb-0">';
+            html += '<thead><tr><th>No.</th><th>Valor</th><th>Vencimento</th></tr></thead><tbody>';
+            for (var i = 0; i < dados.parcelas.length; i++) {
+                var p = dados.parcelas[i];
+                html += '<tr><td>' + p.numero + '</td><td>R$ ' + formatarMoeda(p.valor) + '</td><td>' + formatarData(p.data_vencimento) + '</td></tr>';
+            }
+            html += '</tbody></table></div></div>';
+        }
+
+        // Classificacao Despesa
+        if (dados.classificacao_despesa) {
+            html += '<div class="card mb-3">';
+            html += '<div class="card-header py-2" style="background: #fce4ec; color: #c62828;">';
+            html += '<strong><i class="bi bi-tags"></i> Classificacao de Despesa</strong></div>';
+            html += '<div class="card-body p-3">';
+
+            if (Array.isArray(dados.classificacao_despesa)) {
+                for (var j = 0; j < dados.classificacao_despesa.length; j++) {
+                    var c = dados.classificacao_despesa[j];
+                    html += '<span class="badge bg-danger me-2 mb-1" style="font-size:0.9rem;">' + c.categoria + '</span>';
+                    html += '<span class="badge bg-secondary me-3 mb-1" style="font-size:0.85rem;">' + (c.subcategoria || '') + '</span>';
+                }
+            } else if (typeof dados.classificacao_despesa === 'object') {
+                html += '<span class="badge bg-danger me-2" style="font-size:0.9rem;">' + (dados.classificacao_despesa.categoria || '-') + '</span>';
+                html += '<span class="badge bg-secondary" style="font-size:0.85rem;">' + (dados.classificacao_despesa.subcategoria || '') + '</span>';
+            } else {
+                html += '<span class="badge bg-danger" style="font-size:0.9rem;">' + dados.classificacao_despesa + '</span>';
+            }
+
+            html += '</div></div>';
+        }
+
+        dadosFormatados.innerHTML = html;
+        resultados.style.display = 'block';
+    }
+
+    function formatarData(data) {
+        if (!data) return '-';
+        var partes = data.split('-');
+        if (partes.length === 3) {
+            return partes[2] + '/' + partes[1] + '/' + partes[0];
+        }
+        return data;
+    }
+
+    function formatarMoeda(valor) {
+        if (valor === null || valor === undefined) return '0,00';
+        return Number(valor).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    btnCopy.addEventListener('click', function() {
+        var texto = JSON.stringify(dadosJson, null, 2);
+        navigator.clipboard.writeText(texto).then(function() {
+            btnCopy.innerHTML = '<i class="bi bi-check"></i> Copiado!';
+            btnCopy.classList.add('copied');
+            setTimeout(function() {
+                btnCopy.innerHTML = '<i class="bi bi-clipboard"></i> Copiar JSON';
+                btnCopy.classList.remove('copied');
+            }, 2000);
+        });
+    });
+</script>
+{% endblock %}
