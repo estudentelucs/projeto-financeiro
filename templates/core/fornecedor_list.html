@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Fornecedores - Sistema Administrativo-Financeiro{% endblock %}
+{% block page_title %}Manter Fornecedor{% endblock %}
+
+{% block content %}
+<!-- Card de Busca (Fiel ao modelo do Professor - Imagem 5) -->
+<div class="card-custom mb-4">
+    <div class="card-custom-body">
+        <h6 class="fw-bold text-primary mb-3">Buscar Fornecedores</h6>
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Buscar por razão social, fantasia, CNPJ, email ou telefone..." value="{{ q|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'core:fornecedor_list' %}?todos=1" class="btn btn-success w-100">
+                    <i class="bi bi-list-check"></i> Todos
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Card Lista de Fornecedores -->
+<div class="card-custom">
+    <div class="card-custom-header">
+        <span class="fw-bold">
+            <i class="bi bi-truck me-1"></i> Lista de Fornecedores
+            {% if mostrar_inativos %}
+                <span class="badge bg-danger ms-2">Listando INATIVOS</span>
+            {% else %}
+                <span class="badge bg-success ms-2">Listando ATIVOS</span>
+            {% endif %}
+        </span>
+        <div>
+            {% if mostrar_inativos %}
+                <a href="{% url 'core:fornecedor_list' %}?todos=1" class="btn btn-sm btn-outline-success me-2">
+                    <i class="bi bi-check-circle"></i> Ver Ativos
+                </a>
+            {% else %}
+                <a href="{% url 'core:fornecedor_list' %}?todos=1&inativos=1" class="btn btn-sm btn-outline-secondary me-2">
+                    <i class="bi bi-archive"></i> Ver Inativos
+                </a>
+            {% endif %}
+            <a href="{% url 'core:fornecedor_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg"></i> Inserir Novo Fornecedor
+            </a>
+        </div>
+    </div>
+    <div class="card-custom-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-custom mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Razão Social</th>
+                        <th>Nome Fantasia</th>
+                        <th>CNPJ</th>
+                        <th>Telefone / E-mail</th>
+                        <th>Status</th>
+                        <th style="width: 160px;" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if not carregou %}
+                        <!-- Requisito a: Trazer a tabela de registros vazia -->
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                Tabela de registros vazia.<br>
+                                Utilize a <strong>Busca</strong> acima ou clique no botão <strong>"Todos"</strong> para carregar os registros ativos.
+                            </td>
+                        </tr>
+                    {% elif fornecedores %}
+                        {% for f in fornecedores %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><strong>{{ f.razao_social }}</strong></td>
+                                <td>{{ f.nome_fantasia|default:"-" }}</td>
+                                <td><code>{{ f.cnpj }}</code></td>
+                                <td>
+                                    <div><small><i class="bi bi-telephone"></i> {{ f.telefone|default:"-" }}</small></div>
+                                    <div><small><i class="bi bi-envelope"></i> {{ f.email|default:"-" }}</small></div>
+                                </td>
+                                <td>
+                                    {% if f.ativo %}
+                                        <span class="badge badge-status-ativo">ATIVO</span>
+                                    {% else %}
+                                        <span class="badge badge-status-inativo">INATIVO</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if f.ativo %}
+                                        <a href="{% url 'core:fornecedor_update' f.pk %}" class="btn btn-sm btn-primary btn-action" title="Editar">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                        <a href="{% url 'core:fornecedor_delete' f.pk %}" class="btn btn-sm btn-danger btn-action" title="Excluir (Lógico - Inativar)" onclick="return confirm('Deseja realmente INATIVAR o fornecedor {{ f.razao_social }}?');">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'core:fornecedor_reativar' f.pk %}" class="btn btn-sm btn-success btn-action" title="Reativar registro">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Reativar
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                Nenhum fornecedor encontrado com os critérios informados.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - Sistema Administrativo-Financeiro{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-dark">{{ titulo }}</h4>
+    <a href="{% url 'core:contas_pagar_list' %}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+</div>
+
+<div class="card-custom">
+    <div class="card-custom-header">
+        <span><i class="bi bi-file-earmark-text me-1"></i> Formulário de Conta a Pagar</span>
+    </div>
+    <div class="card-custom-body">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Fornecedor *</label>
+                    {{ form.fornecedor }}
+                    {% if form.fornecedor.errors %}<div class="text-danger small">{{ form.fornecedor.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Faturado *</label>
+                    {{ form.faturado }}
+                    {% if form.faturado.errors %}<div class="text-danger small">{{ form.faturado.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Número da Nota Fiscal *</label>
+                    {{ form.numero_nota_fiscal }}
+                    {% if form.numero_nota_fiscal.errors %}<div class="text-danger small">{{ form.numero_nota_fiscal.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Data de Emissão *</label>
+                    {{ form.data_emissao }}
+                    {% if form.data_emissao.errors %}<div class="text-danger small">{{ form.data_emissao.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Valor Total (R$) *</label>
+                    {{ form.valor_total }}
+                    {% if form.valor_total.errors %}<div class="text-danger small">{{ form.valor_total.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Classificação da Despesa (Segure Ctrl para selecionar mais de uma)</label>
+                    {{ form.tipos_despesa }}
+                    <small class="text-muted">Um registro de contas a pagar pode ter uma ou mais classificações de despesa.</small>
+                    {% if form.tipos_despesa.errors %}<div class="text-danger small">{{ form.tipos_despesa.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Data de Vencimento da Parcela</label>
+                    {{ form.data_vencimento_parcela }}
+                    <small class="text-muted">Data para a geração da 1ª parcela de vencimento.</small>
+                    {% if form.data_vencimento_parcela.errors %}<div class="text-danger small">{{ form.data_vencimento_parcela.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Descrição dos Produtos *</label>
+                    {{ form.descricao_produtos }}
+                    {% if form.descricao_produtos.errors %}<div class="text-danger small">{{ form.descricao_produtos.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Observações</label>
+                    {{ form.observacoes }}
+                    {% if form.observacoes.errors %}<div class="text-danger small">{{ form.observacoes.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-check-lg"></i> Salvar
+                </button>
+                <a href="{% url 'core:contas_pagar_list' %}" class="btn btn-secondary px-4">
+                    <i class="bi bi-x-lg"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

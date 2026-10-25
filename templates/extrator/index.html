@@ -1,34 +1,35 @@
 {% extends 'base.html' %}
 
-{% block title %}Extração de Dados de Nota Fiscal{% endblock %}
+{% block title %}Extração de Dados de Nota Fiscal (IA) - UniRV{% endblock %}
+{% block page_title %}Extrator de Notas Fiscais com IA (Gemini){% endblock %}
 
 {% block extra_css %}
 <style>
     .upload-area {
-        border: 2px dashed #ccc;
+        border: 2px dashed #0d6efd;
         border-radius: 12px;
         padding: 30px;
         text-align: center;
         transition: all 0.3s;
         cursor: pointer;
-        background: #fafbfc;
+        background: #f8faff;
     }
     .upload-area:hover,
     .upload-area.dragover {
-        border-color: var(--accent-color);
-        background: #eef5fc;
+        border-color: #0b5ed7;
+        background: #eef4ff;
     }
     .upload-area.has-file {
-        border-color: #28a745;
+        border-color: #198754;
         background: #f0fff4;
     }
     .upload-icon {
-        font-size: 2.5rem;
-        color: #6c757d;
+        font-size: 2.8rem;
+        color: #0d6efd;
         margin-bottom: 10px;
     }
     .upload-area.has-file .upload-icon {
-        color: #28a745;
+        color: #198754;
     }
     .file-info {
         display: none;
@@ -76,10 +77,6 @@
         align-items: center;
         margin-bottom: 10px;
     }
-    .json-header h6 {
-        margin: 0;
-        color: #333;
-    }
     .btn-copy {
         border: 1px solid #ddd;
         background: white;
@@ -93,9 +90,9 @@
         background: #f0f0f0;
     }
     .btn-copy.copied {
-        background: #28a745;
+        background: #198754;
         color: white;
-        border-color: #28a745;
+        border-color: #198754;
     }
     .loading-overlay {
         display: none;
@@ -108,126 +105,186 @@
         z-index: 9999;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
+        color: white;
     }
     .loading-overlay.visible {
         display: flex;
-    }
-    .loading-box {
-        background: white;
-        border-radius: 12px;
-        padding: 40px;
-        text-align: center;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    }
-    .loading-box .spinner-border {
-        width: 3rem;
-        height: 3rem;
-        color: var(--accent-color);
-    }
-    .loading-box p {
-        margin-top: 15px;
-        font-weight: 600;
-        color: #333;
-    }
-    .tab-content {
-        border: 1px solid #dee2e6;
-        border-top: none;
-        border-radius: 0 0 8px 8px;
-        padding: 20px;
-        background: white;
-    }
-    .nav-tabs .nav-link {
-        font-weight: 600;
-        color: #555;
-    }
-    .nav-tabs .nav-link.active {
-        color: var(--primary-color);
     }
     .alert-erro {
         display: none;
     }
     .alert-erro.visible {
-        display: block;
+        display: flex;
+    }
+    /* Estilo da Consulta no BD (Fiel ao Modelo da Imagem 2 da UniRV) */
+    .box-consulta-bd {
+        background-color: #ffffff;
+        border: 2px solid #212529;
+        border-radius: 8px;
+        padding: 20px 24px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .box-consulta-bd .item-consulta {
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px dashed #e0e0e0;
+    }
+    .box-consulta-bd .item-consulta:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    .box-consulta-bd .titulo-entidade {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #212529;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    .box-consulta-bd .valor-principal {
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #333;
+    }
+    .box-consulta-bd .documento-info {
+        font-size: 0.9rem;
+        color: #555;
+    }
+    .status-bd-existe {
+        color: #0d6efd;
+        font-weight: 700;
+        font-size: 1rem;
+        text-transform: uppercase;
+    }
+    .status-bd-nao-existe {
+        color: #dc3545;
+        font-weight: 700;
+        font-size: 1rem;
+        text-transform: uppercase;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header text-center">
-                <h4><i class="bi bi-file-earmark-text"></i> Extração de Dados de Nota Fiscal</h4>
-                <p>Carregue um PDF de nota fiscal e extraia os dados automaticamente usando IA</p>
+    <div class="col-lg-10">
+        <!-- Card Principal -->
+        <div class="card-custom">
+            <div class="card-custom-header bg-dark text-white">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-pdf text-warning me-2"></i> Processador de PDF com Inteligência Artificial (Gemini)</h5>
+                    <small class="text-white-50">1ª e 2ª Etapas: Extração estruturada de Contas a Pagar e Análise em Banco de Dados</small>
+                </div>
             </div>
-            <div class="card-body p-4">
+            <div class="card-custom-body">
                 <!-- Upload Area -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-upload"></i> Upload do PDF
-                    </label>
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-icon">
-                            <i class="bi bi-file-earmark-pdf"></i>
-                        </div>
-                        <p class="mb-1 fw-bold">Selecione o arquivo PDF da nota fiscal</p>
-                        <p class="text-muted small">Escolher arquivo. Nenhum arquivo escolhido</p>
-                    </div>
-                    <input type="file" id="inputPdf" accept=".pdf" class="d-none">
+                <div class="upload-area" id="uploadArea">
+                    <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                    <h6 class="fw-bold mb-1">Selecione ou arraste o arquivo PDF da nota fiscal</h6>
+                    <p class="text-muted small mb-0">Formatos aceitos: <strong>PDF</strong> (tamanho máximo de 10MB)</p>
+                    <input type="file" id="arquivoInput" accept=".pdf" style="display: none;">
                 </div>
 
-                <!-- File Info -->
+                <!-- File Info Bar -->
                 <div class="file-info" id="fileInfo">
                     <div>
-                        <i class="bi bi-file-earmark-pdf-fill text-success me-2" style="font-size:1.3rem;"></i>
+                        <i class="bi bi-file-earmark-pdf text-danger fs-5 me-2"></i>
                         <span class="file-name" id="fileName"></span>
                         <span class="file-size ms-2" id="fileSize"></span>
                     </div>
                     <button type="button" class="btn-remove" id="btnRemove" title="Remover arquivo">
-                        <i class="bi bi-x-circle"></i>
+                        <i class="bi bi-x-circle-fill"></i>
                     </button>
                 </div>
 
-                <!-- Extract Button -->
-                <button type="button" class="btn btn-primary w-100 mt-3" id="btnExtrair" disabled>
-                    <i class="bi bi-cpu"></i> EXTRAIR DADOS
-                </button>
+                <!-- Botão de Extração -->
+                <div class="d-grid mt-3">
+                    <button type="button" class="btn btn-primary btn-lg fw-bold" id="btnExtrair" disabled>
+                        <i class="bi bi-cpu me-2"></i> EXTRAIR DADOS DA NOTA FISCAL
+                    </button>
+                </div>
 
                 <!-- Error Alert -->
                 <div class="alert alert-danger alert-erro mt-3" id="alertErro">
-                    <i class="bi bi-exclamation-triangle"></i>
+                    <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
                     <span id="erroMsg"></span>
                 </div>
 
                 <!-- Results Section -->
                 <div id="resultados" style="display:none;" class="mt-4">
                     <hr>
-                    <h5 class="mb-3"><i class="bi bi-check-circle text-success"></i> Dados Extraidos</h5>
 
-                    <!-- Tabs -->
+                    <!-- ======================================================== -->
+                    <!-- 2ª ETAPA: Análise e Consulta no Banco de Dados (IMAGEM 2) -->
+                    <!-- ======================================================== -->
+                    <div class="card-custom mb-4 border-2 border-dark">
+                        <div class="card-custom-header bg-light">
+                            <span class="fw-bold text-dark fs-6">
+                                <i class="bi bi-database-check text-primary me-2"></i> Resposta da Consulta no Banco de Dados (2ª Etapa)
+                            </span>
+                        </div>
+                        <div class="card-custom-body">
+                            <div class="box-consulta-bd" id="boxConsultaBd">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+
+                            <!-- Botão para Lançar Movimento no Banco de Dados -->
+                            <div class="mt-3 p-3 bg-light rounded border d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark"><i class="bi bi-check2-circle text-success me-1"></i> Efetivar Registro no Sistema</h6>
+                                    <small class="text-muted">Cria novo fornecedor/faturado/despesa se não existirem e gera o Contas a Pagar com suas parcelas.</small>
+                                </div>
+                                <button type="button" class="btn btn-success btn-lg fw-bold px-4" id="btnLancarMovimento">
+                                    <i class="bi bi-cloud-plus-fill me-1"></i> LANÇAR NO BANCO DE DADOS
+                                </button>
+                            </div>
+
+                            <!-- Alert de Sucesso no Lançamento -->
+                            <div class="alert alert-success mt-3" id="alertSucessoLancamento" style="display: none;">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill fs-2 text-success me-3"></i>
+                                    <div>
+                                        <h5 class="alert-heading fw-bold mb-1" id="msgSucessoTitulo">REGISTRO FOI LANÇADO COM SUCESSO!</h5>
+                                        <p class="mb-0" id="msgSucessoDetalhes"></p>
+                                    </div>
+                                </div>
+                                <div class="mt-3 pt-2 border-top">
+                                    <a href="{% url 'core:contas_pagar_list' %}?todos=1" class="btn btn-sm btn-outline-success fw-bold">
+                                        <i class="bi bi-arrow-right-circle"></i> Ir para Contas a Pagar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Abas de Visualização (1ª Etapa) -->
+                    <h5 class="mb-3"><i class="bi bi-check-circle text-success"></i> Dados Extraídos pela IA</h5>
                     <ul class="nav nav-tabs" id="resultTabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link" id="tab-formatted" data-bs-toggle="tab" href="#formatted" role="tab">Visualizacao Formatada</a>
-                        </li>
                         <li class="nav-item">
                             <a class="nav-link active" id="tab-json" data-bs-toggle="tab" href="#jsonTab" role="tab">JSON</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="tab-formatted" data-bs-toggle="tab" href="#formatted" role="tab">Visualização Formatada</a>
+                        </li>
                     </ul>
-                    <div class="tab-content" id="resultTabContent">
-                        <!-- Formatted View -->
-                        <div class="tab-pane fade" id="formatted" role="tabpanel">
-                            <div id="dadosFormatados"></div>
-                        </div>
-                        <!-- JSON View -->
+                    <div class="tab-content pt-3" id="resultTabContent">
+                        <!-- JSON View (Ativa por padrão) -->
                         <div class="tab-pane fade show active" id="jsonTab" role="tabpanel">
                             <div class="json-header">
-                                <h6><i class="bi bi-braces"></i> Dados em JSON</h6>
+                                <h6><i class="bi bi-braces"></i> Dados em Formato JSON</h6>
                                 <button type="button" class="btn-copy" id="btnCopy">
                                     <i class="bi bi-clipboard"></i> Copiar JSON
                                 </button>
                             </div>
                             <div class="json-output" id="jsonOutput"></div>
-                            <p class="text-muted small mt-2"><i class="bi bi-info-circle"></i> Este JSON contem os dados extraidos da nota fiscal e pode ser usado para integracao com outros sistemas.</p>
+                            <p class="text-muted small mt-2">
+                                <i class="bi bi-info-circle"></i> Este JSON contém os dados extraídos da nota fiscal e pode ser usado para integração com outros sistemas.
+                            </p>
+                        </div>
+                        <!-- Formatted View -->
+                        <div class="tab-pane fade" id="formatted" role="tabpanel">
+                            <div id="dadosFormatados"></div>
                         </div>
                     </div>
                 </div>
@@ -238,39 +295,44 @@
 
 <!-- Loading Overlay -->
 <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-box">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Carregando...</span>
-        </div>
-        <p>Processando nota fiscal com IA...<br><small class="text-muted">Isso pode levar alguns segundos</small></p>
-    </div>
+    <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+    <h5 id="loadingTexto">Processando a nota fiscal com a IA Gemini...</h5>
+    <small class="text-white-50">Isso pode levar alguns segundos dependendo do tamanho do PDF.</small>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     var uploadArea = document.getElementById('uploadArea');
-    var inputPdf = document.getElementById('inputPdf');
+    var arquivoInput = document.getElementById('arquivoInput');
     var fileInfo = document.getElementById('fileInfo');
-    var fileNameEl = document.getElementById('fileName');
-    var fileSizeEl = document.getElementById('fileSize');
+    var fileName = document.getElementById('fileName');
+    var fileSize = document.getElementById('fileSize');
     var btnRemove = document.getElementById('btnRemove');
     var btnExtrair = document.getElementById('btnExtrair');
-    var loadingOverlay = document.getElementById('loadingOverlay');
     var alertErro = document.getElementById('alertErro');
     var erroMsg = document.getElementById('erroMsg');
     var resultados = document.getElementById('resultados');
-    var jsonOutput = document.getElementById('jsonOutput');
+    var boxConsultaBd = document.getElementById('boxConsultaBd');
     var dadosFormatados = document.getElementById('dadosFormatados');
+    var jsonOutput = document.getElementById('jsonOutput');
     var btnCopy = document.getElementById('btnCopy');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    var loadingTexto = document.getElementById('loadingTexto');
+    var btnLancarMovimento = document.getElementById('btnLancarMovimento');
+    var alertSucessoLancamento = document.getElementById('alertSucessoLancamento');
+    var msgSucessoDetalhes = document.getElementById('msgSucessoDetalhes');
 
     var arquivoSelecionado = null;
-    var dadosJson = null;
+    var dadosExtraidosGlobais = null;
+    var consultaBdGlobal = null;
 
-    // Click to upload
-    uploadArea.addEventListener('click', function() { inputPdf.click(); });
+    // Upload Trigger
+    uploadArea.addEventListener('click', function() {
+        arquivoInput.click();
+    });
 
-    // Drag and Drop
+    // Drag & Drop
     uploadArea.addEventListener('dragover', function(e) {
         e.preventDefault();
         uploadArea.classList.add('dragover');
@@ -284,22 +346,33 @@
         e.preventDefault();
         uploadArea.classList.remove('dragover');
         var files = e.dataTransfer.files;
-        if (files.length > 0 && files[0].type === 'application/pdf') {
-            selecionarArquivo(files[0]);
+        if (files.length > 0) {
+            handleFile(files[0]);
         }
     });
 
-    // File input change
-    inputPdf.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            selecionarArquivo(e.target.files[0]);
+    // File Input Change
+    arquivoInput.addEventListener('change', function() {
+        if (arquivoInput.files.length > 0) {
+            handleFile(arquivoInput.files[0]);
         }
     });
 
-    function selecionarArquivo(arquivo) {
-        arquivoSelecionado = arquivo;
-        fileNameEl.textContent = arquivo.name;
-        fileSizeEl.textContent = formatarTamanho(arquivo.size);
+    function handleFile(file) {
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            mostrarErro('Por favor, selecione apenas arquivos em formato PDF.');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            mostrarErro('O arquivo é muito grande. O tamanho máximo permitido é de 10MB.');
+            return;
+        }
+
+        arquivoSelecionado = file;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatBytes(file.size);
+
         fileInfo.classList.add('visible');
         uploadArea.classList.add('has-file');
         btnExtrair.disabled = false;
@@ -307,30 +380,32 @@
         esconderResultados();
     }
 
-    function formatarTamanho(bytes) {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        var k = 1024;
+        var sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        var i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    // Remove file
+    // Remove File
     btnRemove.addEventListener('click', function(e) {
         e.stopPropagation();
         arquivoSelecionado = null;
-        inputPdf.value = '';
+        arquivoInput.value = '';
         fileInfo.classList.remove('visible');
         uploadArea.classList.remove('has-file');
         btnExtrair.disabled = true;
         esconderResultados();
     });
 
-    // Extract data
+    // Extrair Dados
     btnExtrair.addEventListener('click', function() {
         if (!arquivoSelecionado) return;
 
         esconderErro();
         esconderResultados();
-        mostrarLoading();
+        mostrarLoading('Extraindo dados da nota fiscal via Gemini (IA)...');
 
         var formData = new FormData();
         formData.append('arquivo_pdf', arquivoSelecionado);
@@ -342,14 +417,15 @@
         .then(function(response) {
             return response.json().then(function(data) {
                 if (!response.ok) {
-                    throw new Error(data.erro || 'Erro ao processar o arquivo.');
+                    throw new Error(data.erro || 'Erro ao processar a nota fiscal.');
                 }
                 return data;
             });
         })
         .then(function(data) {
-            dadosJson = data.dados;
-            exibirResultados(data.dados);
+            dadosExtraidosGlobais = data.dados;
+            consultaBdGlobal = data.consulta_bd;
+            exibirResultados(data.dados, data.consulta_bd);
         })
         .catch(function(error) {
             mostrarErro(error.message);
@@ -359,7 +435,8 @@
         });
     });
 
-    function mostrarLoading() {
+    function mostrarLoading(texto) {
+        loadingTexto.textContent = texto || 'Aguarde...';
         loadingOverlay.classList.add('visible');
     }
 
@@ -378,97 +455,151 @@
 
     function esconderResultados() {
         resultados.style.display = 'none';
+        alertSucessoLancamento.style.display = 'none';
     }
 
-    function exibirResultados(dados) {
-        // JSON tab
+    // Exibir Resultados Completo (1ª e 2ª Etapas)
+    function exibirResultados(dados, consultaBd) {
+        // 1. Montar Card da Consulta no BD (Fiel à Imagem 2 da UniRV)
+        var htmlConsulta = '';
+
+        if (consultaBd) {
+            // FORNECEDOR
+            var f = consultaBd.fornecedor || {};
+            htmlConsulta += '<div class="item-consulta">';
+            htmlConsulta += '<div class="titulo-entidade">FORNECEDOR:</div>';
+            htmlConsulta += '<div class="valor-principal">' + (f.razao_social || 'NÃO INFORMADO') + '</div>';
+            htmlConsulta += '<div class="documento-info">CNPJ: ' + (f.cnpj || '-') + '</div>';
+            if (f.existe) {
+                htmlConsulta += '<div class="status-bd-existe">' + f.status_texto + '</div>';
+            } else {
+                htmlConsulta += '<div class="status-bd-nao-existe">' + f.status_texto + '</div>';
+            }
+            htmlConsulta += '</div>';
+
+            // FATURADO
+            var fat = consultaBd.faturado || {};
+            htmlConsulta += '<div class="item-consulta">';
+            htmlConsulta += '<div class="titulo-entidade">FATURADO:</div>';
+            htmlConsulta += '<div class="valor-principal">' + (fat.nome_completo || 'NÃO INFORMADO') + '</div>';
+            htmlConsulta += '<div class="documento-info">CPF: ' + (fat.cpf || '-') + '</div>';
+            if (fat.existe) {
+                htmlConsulta += '<div class="status-bd-existe">' + fat.status_texto + '</div>';
+            } else {
+                htmlConsulta += '<div class="status-bd-nao-existe">' + fat.status_texto + '</div>';
+            }
+            htmlConsulta += '</div>';
+
+            // DESPESA
+            var d = consultaBd.despesa || {};
+            htmlConsulta += '<div class="item-consulta">';
+            htmlConsulta += '<div class="titulo-entidade">DESPESA:</div>';
+            htmlConsulta += '<div class="valor-principal">' + (d.descricao || 'DESPESA NÃO IDENTIFICADA') + '</div>';
+            if (d.existe) {
+                htmlConsulta += '<div class="status-bd-existe">' + d.status_texto + '</div>';
+            } else {
+                htmlConsulta += '<div class="status-bd-nao-existe">' + d.status_texto + '</div>';
+            }
+            htmlConsulta += '</div>';
+        }
+
+        boxConsultaBd.innerHTML = htmlConsulta;
+
+        // 2. Montar JSON View
         jsonOutput.textContent = JSON.stringify(dados, null, 2);
 
-        // Formatted tab
+        // 3. Montar Visualização Formatada
         var html = '';
 
-        // Fornecedor
         if (dados.fornecedor) {
             html += '<div class="card mb-3">';
-            html += '<div class="card-header py-2" style="background: #e3f2fd; color: #1565c0;">';
-            html += '<strong><i class="bi bi-building"></i> Fornecedor</strong></div>';
+            html += '<div class="card-header py-2 bg-light text-primary"><strong><i class="bi bi-building"></i> Fornecedor</strong></div>';
             html += '<div class="card-body p-3"><table class="table table-sm mb-0">';
-            html += '<tr><td class="fw-bold" style="width:40%">Razao Social</td><td>' + (dados.fornecedor.razao_social || '-') + '</td></tr>';
+            html += '<tr><td class="fw-bold" style="width:35%">Razão Social</td><td>' + (dados.fornecedor.razao_social || '-') + '</td></tr>';
             html += '<tr><td class="fw-bold">Nome Fantasia</td><td>' + (dados.fornecedor.nome_fantasia || '-') + '</td></tr>';
             html += '<tr><td class="fw-bold">CNPJ</td><td>' + (dados.fornecedor.cnpj || '-') + '</td></tr>';
             html += '</table></div></div>';
         }
 
-        // Faturado
         if (dados.faturado) {
             html += '<div class="card mb-3">';
-            html += '<div class="card-header py-2" style="background: #e8f5e9; color: #2e7d32;">';
-            html += '<strong><i class="bi bi-person"></i> Faturado</strong></div>';
+            html += '<div class="card-header py-2 bg-light text-success"><strong><i class="bi bi-person"></i> Faturado</strong></div>';
             html += '<div class="card-body p-3"><table class="table table-sm mb-0">';
-            html += '<tr><td class="fw-bold" style="width:40%">Nome Completo</td><td>' + (dados.faturado.nome_completo || '-') + '</td></tr>';
+            html += '<tr><td class="fw-bold" style="width:35%">Nome Completo</td><td>' + (dados.faturado.nome_completo || '-') + '</td></tr>';
             html += '<tr><td class="fw-bold">CPF</td><td>' + (dados.faturado.cpf || '-') + '</td></tr>';
             html += '</table></div></div>';
         }
 
-        // Nota Fiscal Details
         html += '<div class="card mb-3">';
-        html += '<div class="card-header py-2" style="background: #fff3e0; color: #e65100;">';
-        html += '<strong><i class="bi bi-receipt"></i> Dados da Nota Fiscal</strong></div>';
+        html += '<div class="card-header py-2 bg-light text-warning"><strong><i class="bi bi-receipt"></i> Dados da Nota Fiscal</strong></div>';
         html += '<div class="card-body p-3"><table class="table table-sm mb-0">';
-        html += '<tr><td class="fw-bold" style="width:40%">Numero NF</td><td>' + (dados.numero_nota_fiscal || '-') + '</td></tr>';
-        html += '<tr><td class="fw-bold">Data de Emissao</td><td>' + formatarData(dados.data_emissao) + '</td></tr>';
-        html += '<tr><td class="fw-bold">Valor Total</td><td><strong class="text-success">R$ ' + formatarMoeda(dados.valor_total) + '</strong></td></tr>';
+        html += '<tr><td class="fw-bold" style="width:35%">Número da NF</td><td>' + (dados.numero_nota_fiscal || '-') + '</td></tr>';
+        html += '<tr><td class="fw-bold">Data de Emissão</td><td>' + formatarData(dados.data_emissao) + '</td></tr>';
+        html += '<tr><td class="fw-bold">Valor Total</td><td><strong class="text-danger">R$ ' + formatarMoeda(dados.valor_total) + '</strong></td></tr>';
         html += '<tr><td class="fw-bold">Qtd. Parcelas</td><td>' + (dados.quantidade_parcelas || 1) + '</td></tr>';
         html += '</table></div></div>';
 
-        // Produtos
         if (dados.descricao_produtos) {
             html += '<div class="card mb-3">';
-            html += '<div class="card-header py-2" style="background: #f3e5f5; color: #6a1b9a;">';
-            html += '<strong><i class="bi bi-box"></i> Descricao dos Produtos</strong></div>';
+            html += '<div class="card-header py-2 bg-light text-dark"><strong><i class="bi bi-box"></i> Descrição dos Produtos</strong></div>';
             html += '<div class="card-body p-3"><p class="mb-0">' + dados.descricao_produtos + '</p></div></div>';
-        }
-
-        // Parcelas
-        if (dados.parcelas && dados.parcelas.length > 0) {
-            html += '<div class="card mb-3">';
-            html += '<div class="card-header py-2" style="background: #e0f7fa; color: #00695c;">';
-            html += '<strong><i class="bi bi-calendar-check"></i> Parcelas</strong></div>';
-            html += '<div class="card-body p-3"><table class="table table-sm table-striped mb-0">';
-            html += '<thead><tr><th>No.</th><th>Valor</th><th>Vencimento</th></tr></thead><tbody>';
-            for (var i = 0; i < dados.parcelas.length; i++) {
-                var p = dados.parcelas[i];
-                html += '<tr><td>' + p.numero + '</td><td>R$ ' + formatarMoeda(p.valor) + '</td><td>' + formatarData(p.data_vencimento) + '</td></tr>';
-            }
-            html += '</tbody></table></div></div>';
-        }
-
-        // Classificacao Despesa
-        if (dados.classificacao_despesa) {
-            html += '<div class="card mb-3">';
-            html += '<div class="card-header py-2" style="background: #fce4ec; color: #c62828;">';
-            html += '<strong><i class="bi bi-tags"></i> Classificacao de Despesa</strong></div>';
-            html += '<div class="card-body p-3">';
-
-            if (Array.isArray(dados.classificacao_despesa)) {
-                for (var j = 0; j < dados.classificacao_despesa.length; j++) {
-                    var c = dados.classificacao_despesa[j];
-                    html += '<span class="badge bg-danger me-2 mb-1" style="font-size:0.9rem;">' + c.categoria + '</span>';
-                    html += '<span class="badge bg-secondary me-3 mb-1" style="font-size:0.85rem;">' + (c.subcategoria || '') + '</span>';
-                }
-            } else if (typeof dados.classificacao_despesa === 'object') {
-                html += '<span class="badge bg-danger me-2" style="font-size:0.9rem;">' + (dados.classificacao_despesa.categoria || '-') + '</span>';
-                html += '<span class="badge bg-secondary" style="font-size:0.85rem;">' + (dados.classificacao_despesa.subcategoria || '') + '</span>';
-            } else {
-                html += '<span class="badge bg-danger" style="font-size:0.9rem;">' + dados.classificacao_despesa + '</span>';
-            }
-
-            html += '</div></div>';
         }
 
         dadosFormatados.innerHTML = html;
         resultados.style.display = 'block';
+
+        // Garantir aba JSON ativa por padrão conforme requisito
+        var tabJson = document.getElementById('tab-json');
+        if (tabJson) {
+            var bsTab = new bootstrap.Tab(tabJson);
+            bsTab.show();
+        }
     }
+
+    // Ação: Lançar Movimento no Banco de Dados (2ª Etapa)
+    btnLancarMovimento.addEventListener('click', function() {
+        if (!dadosExtraidosGlobais) return;
+
+        esconderErro();
+        mostrarLoading('Criando registros e lançando movimento no Banco de Dados...');
+
+        fetch('/extrator/lancar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                dados: dadosExtraidosGlobais,
+                consulta_bd: consultaBdGlobal
+            })
+        })
+        .then(function(response) {
+            return response.json().then(function(data) {
+                if (!response.ok) {
+                    throw new Error(data.erro || 'Erro ao lançar movimento no banco.');
+                }
+                return data;
+            });
+        })
+        .then(function(res) {
+            alertSucessoLancamento.style.display = 'block';
+            var det = 'Movimento de Contas a Pagar registrado com sucesso! (ID da Conta: ' + res.conta_id + ' | NF: ' + res.numero_nf + '). ' +
+                      'Fornecedor: ' + res.fornecedor_nome + ' (ID: ' + res.fornecedor_id + '), ' +
+                      'Faturado: ' + res.faturado_nome + ' (ID: ' + res.faturado_id + '), ' +
+                      'Classificação: ' + res.despesa_nome + ' (ID: ' + res.despesa_id + '). ' +
+                      'Total de ' + res.total_parcelas + ' parcela(s) vinculada(s).';
+            msgSucessoDetalhes.textContent = det;
+            btnLancarMovimento.disabled = true;
+            btnLancarMovimento.innerHTML = '<i class="bi bi-check-all"></i> LANÇADO COM SUCESSO';
+            alertSucessoLancamento.scrollIntoView({ behavior: 'smooth' });
+        })
+        .catch(function(err) {
+            mostrarErro(err.message);
+        })
+        .finally(function() {
+            esconderLoading();
+        });
+    });
 
     function formatarData(data) {
         if (!data) return '-';
@@ -488,7 +619,7 @@
     }
 
     btnCopy.addEventListener('click', function() {
-        var texto = JSON.stringify(dadosJson, null, 2);
+        var texto = JSON.stringify(dadosExtraidosGlobais, null, 2);
         navigator.clipboard.writeText(texto).then(function() {
             btnCopy.innerHTML = '<i class="bi bi-check"></i> Copiado!';
             btnCopy.classList.add('copied');

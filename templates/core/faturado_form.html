@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - Sistema Administrativo-Financeiro{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-dark">{{ titulo }}</h4>
+    <a href="{% url 'core:faturado_list' %}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+</div>
+
+<div class="card-custom">
+    <div class="card-custom-header">
+        <span><i class="bi bi-file-earmark-text me-1"></i> Formulário de Faturado</span>
+    </div>
+    <div class="card-custom-body">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Nome Completo *</label>
+                    {{ form.nome_completo }}
+                    {% if form.nome_completo.errors %}<div class="text-danger small">{{ form.nome_completo.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">CPF *</label>
+                    {{ form.cpf }}
+                    {% if form.cpf.errors %}<div class="text-danger small">{{ form.cpf.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">E-mail</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Telefone</label>
+                    {{ form.telefone }}
+                    {% if form.telefone.errors %}<div class="text-danger small">{{ form.telefone.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Endereço</label>
+                    {{ form.endereco }}
+                    {% if form.endereco.errors %}<div class="text-danger small">{{ form.endereco.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-check-lg"></i> Salvar
+                </button>
+                <a href="{% url 'core:faturado_list' %}" class="btn btn-secondary px-4">
+                    <i class="bi bi-x-lg"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

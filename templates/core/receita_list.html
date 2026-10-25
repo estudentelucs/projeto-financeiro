@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Tipos de Receita - Sistema Administrativo-Financeiro{% endblock %}
+{% block page_title %}Manter Tipo de Receita{% endblock %}
+
+{% block content %}
+<div class="card-custom mb-4">
+    <div class="card-custom-body">
+        <h6 class="fw-bold text-primary mb-3">Buscar Tipos de Receita</h6>
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Buscar por nome ou descrição da receita..." value="{{ q|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'core:receita_list' %}?todos=1" class="btn btn-success w-100">
+                    <i class="bi bi-list-check"></i> Todos
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card-custom">
+    <div class="card-custom-header">
+        <span class="fw-bold">
+            <i class="bi bi-cash-stack me-1"></i> Lista de Tipos de Receita
+            {% if mostrar_inativos %}<span class="badge bg-danger ms-2">Listando INATIVOS</span>{% else %}<span class="badge bg-success ms-2">Listando ATIVOS</span>{% endif %}
+        </span>
+        <div>
+            {% if mostrar_inativos %}
+                <a href="{% url 'core:receita_list' %}?todos=1" class="btn btn-sm btn-outline-success me-2">Ver Ativos</a>
+            {% else %}
+                <a href="{% url 'core:receita_list' %}?todos=1&inativos=1" class="btn btn-sm btn-outline-secondary me-2">Ver Inativos</a>
+            {% endif %}
+            <a href="{% url 'core:receita_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg"></i> Inserir Novo Tipo de Receita
+            </a>
+        </div>
+    </div>
+    <div class="card-custom-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-custom mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Nome da Receita</th>
+                        <th>Descrição</th>
+                        <th>Status</th>
+                        <th style="width: 160px;" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if not carregou %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                Tabela de registros vazia.<br>
+                                Utilize a <strong>Busca</strong> acima ou clique no botão <strong>"Todos"</strong> para carregar os registros ativos.
+                            </td>
+                        </tr>
+                    {% elif receitas %}
+                        {% for r in receitas %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><strong>{{ r.nome }}</strong></td>
+                                <td><small class="text-muted">{{ r.descricao|default:"-" }}</small></td>
+                                <td>
+                                    {% if r.ativo %}
+                                        <span class="badge badge-status-ativo">ATIVO</span>
+                                    {% else %}
+                                        <span class="badge badge-status-inativo">INATIVO</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if r.ativo %}
+                                        <a href="{% url 'core:receita_update' r.pk %}" class="btn btn-sm btn-primary btn-action" title="Editar">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                        <a href="{% url 'core:receita_delete' r.pk %}" class="btn btn-sm btn-danger btn-action" title="Excluir (Lógico - Inativar)" onclick="return confirm('Deseja realmente INATIVAR a receita {{ r.nome }}?');">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'core:receita_reativar' r.pk %}" class="btn btn-sm btn-success btn-action" title="Reativar registro">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Reativar
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                Nenhum tipo de receita encontrado com os critérios informados.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Contas a Pagar - Sistema Administrativo-Financeiro{% endblock %}
+{% block page_title %}Registrar Contas a Pagar{% endblock %}
+
+{% block content %}
+<div class="card-custom mb-4">
+    <div class="card-custom-body">
+        <h6 class="fw-bold text-primary mb-3">Buscar Contas a Pagar</h6>
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Buscar por número da NF, fornecedor, faturado ou descrição..." value="{{ q|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'core:contas_pagar_list' %}?todos=1" class="btn btn-success w-100">
+                    <i class="bi bi-list-check"></i> Todos
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card-custom">
+    <div class="card-custom-header">
+        <span class="fw-bold">
+            <i class="bi bi-arrow-up-circle text-danger me-1"></i> Lista de Contas a Pagar
+            {% if mostrar_inativos %}<span class="badge bg-danger ms-2">Listando INATIVOS</span>{% else %}<span class="badge bg-success ms-2">Listando ATIVOS</span>{% endif %}
+        </span>
+        <div>
+            {% if mostrar_inativos %}
+                <a href="{% url 'core:contas_pagar_list' %}?todos=1" class="btn btn-sm btn-outline-success me-2">Ver Ativas</a>
+            {% else %}
+                <a href="{% url 'core:contas_pagar_list' %}?todos=1&inativos=1" class="btn btn-sm btn-outline-secondary me-2">Ver Inativas</a>
+            {% endif %}
+            <a href="{% url 'core:contas_pagar_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg"></i> Registrar Conta a Pagar
+            </a>
+        </div>
+    </div>
+    <div class="card-custom-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-custom mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>NF / Emissão</th>
+                        <th>Fornecedor</th>
+                        <th>Faturado</th>
+                        <th>Classificação Despesa</th>
+                        <th>Valor Total / Parcelas</th>
+                        <th>Status</th>
+                        <th style="width: 160px;" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if not carregou %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                Tabela de registros vazia.<br>
+                                Utilize a <strong>Busca</strong> acima ou clique no botão <strong>"Todos"</strong> para carregar os registros ativos.
+                            </td>
+                        </tr>
+                    {% elif contas %}
+                        {% for c in contas %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong>NF: {{ c.numero_nota_fiscal }}</strong>
+                                    <div class="small text-muted"><i class="bi bi-calendar"></i> {{ c.data_emissao|date:"d/m/Y" }}</div>
+                                </td>
+                                <td>
+                                    <strong>{{ c.fornecedor.razao_social }}</strong>
+                                    <div class="small text-muted">CNPJ: {{ c.fornecedor.cnpj }}</div>
+                                </td>
+                                <td>
+                                    {{ c.faturado.nome_completo }}
+                                    <div class="small text-muted">CPF: {{ c.faturado.cpf }}</div>
+                                </td>
+                                <td>
+                                    {% for d in c.tipos_despesa.all %}
+                                        <span class="badge bg-danger mb-1">{{ d.categoria }} - {{ d.nome }}</span><br>
+                                    {% empty %}
+                                        <span class="text-muted small">-</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <strong class="text-danger">R$ {{ c.valor_total|floatformat:2 }}</strong>
+                                    <div class="small text-muted">
+                                        {{ c.parcelas.count }} parcela(s)
+                                        {% for p in c.parcelas.all %}
+                                            <span class="badge bg-light text-dark border">P{{ p.numero_parcela }}: {{ p.data_vencimento|date:"d/m/Y" }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if c.ativo %}
+                                        <span class="badge badge-status-ativo">ATIVO</span>
+                                    {% else %}
+                                        <span class="badge badge-status-inativo">INATIVO</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if c.ativo %}
+                                        <a href="{% url 'core:contas_pagar_update' c.pk %}" class="btn btn-sm btn-primary btn-action" title="Editar">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                        <a href="{% url 'core:contas_pagar_delete' c.pk %}" class="btn btn-sm btn-danger btn-action" title="Excluir (Lógico - Inativar)" onclick="return confirm('Deseja realmente INATIVAR a conta NF {{ c.numero_nota_fiscal }}?');">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'core:contas_pagar_reativar' c.pk %}" class="btn btn-sm btn-success btn-action" title="Reativar registro">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Reativar
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                Nenhuma conta a pagar encontrada com os critérios informados.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

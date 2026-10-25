@@ -1,44 +1,168 @@
 {% extends 'base.html' %}
 
-{% block title %}Início - Sistema Administrativo-Financeiro{% endblock %}
+{% block title %}Dashboard - Sistema Administrativo-Financeiro{% endblock %}
+{% block page_title %}Dashboard Geral{% endblock %}
 
 {% block content %}
-<div class="text-center mb-5">
-    <h2 class="fw-bold" style="color: var(--primary-color);">Sistema Administrativo-Financeiro</h2>
-    <p class="text-muted">Gerencie fornecedores, clientes, contas a pagar e receber</p>
+<!-- Card Requisito Obrigatório: Código da Última Atualização no GitHub -->
+<div class="alert alert-dark shadow-sm border-0 d-flex justify-content-between align-items-center mb-4 p-3" style="border-left: 5px solid #0d6efd !important;">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-github fs-2 me-3 text-warning"></i>
+        <div>
+            <h6 class="mb-0 fw-bold">CÓDIGO DA ÚLTIMA ATUALIZAÇÃO NO GITHUB:</h6>
+            <span class="fs-5 fw-bold font-monospace text-info">{{ ULTIMA_ATUALIZACAO_GITHUB }}</span>
+            <span class="text-muted ms-2 small">(Commit ativo em produção)</span>
+        </div>
+    </div>
+    <div>
+        <a href="{{ GITHUB_REPO_URL }}" target="_blank" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-git"></i> Ver no GitHub
+        </a>
+    </div>
 </div>
 
-<div class="row g-4 justify-content-center">
-    <div class="col-md-4">
-        <div class="card h-100 text-center p-4">
-            <div class="card-body">
-                <i class="bi bi-file-earmark-pdf" style="font-size: 3rem; color: var(--accent-color);"></i>
-                <h5 class="card-title mt-3">Extrator de Notas Fiscais</h5>
-                <p class="card-text text-muted">Carregue um PDF de nota fiscal e extraia dados automaticamente usando inteligência artificial (Gemini).</p>
-                <a href="/extrator/" class="btn btn-primary">
-                    <i class="bi bi-arrow-right"></i> Acessar Extrator
-                </a>
+<!-- Métricas e Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom p-3 border-start border-4 border-primary">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs fw-bold text-primary text-uppercase mb-1">Fornecedores Ativos</div>
+                    <div class="h4 mb-0 fw-bold text-gray-800">{{ total_fornecedores }}</div>
+                </div>
+                <i class="bi bi-truck fs-1 text-gray-300 text-primary opacity-50"></i>
             </div>
+            <a href="{% url 'core:fornecedor_list' %}?todos=1" class="small text-primary text-decoration-none mt-2 d-inline-block">Listar todos &rarr;</a>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100 text-center p-4">
-            <div class="card-body">
-                <i class="bi bi-people" style="font-size: 3rem; color: #28a745;"></i>
-                <h5 class="card-title mt-3">Cadastros</h5>
-                <p class="card-text text-muted">Gerencie fornecedores, clientes, faturados, tipos de receita e despesa.</p>
-                <span class="badge bg-warning text-dark">Em breve - 2ª Etapa</span>
+
+    <div class="col-md-3">
+        <div class="card-custom p-3 border-start border-4 border-success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs fw-bold text-success text-uppercase mb-1">Clientes Ativos</div>
+                    <div class="h4 mb-0 fw-bold text-gray-800">{{ total_clientes }}</div>
+                </div>
+                <i class="bi bi-people fs-1 text-success opacity-50"></i>
             </div>
+            <a href="{% url 'core:cliente_list' %}?todos=1" class="small text-success text-decoration-none mt-2 d-inline-block">Listar todos &rarr;</a>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100 text-center p-4">
-            <div class="card-body">
-                <i class="bi bi-cash-stack" style="font-size: 3rem; color: #dc3545;"></i>
-                <h5 class="card-title mt-3">Contas</h5>
-                <p class="card-text text-muted">Registre e acompanhe contas a pagar e contas a receber com parcelas.</p>
-                <span class="badge bg-warning text-dark">Em breve - 2ª Etapa</span>
+
+    <div class="col-md-3">
+        <div class="card-custom p-3 border-start border-4 border-info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs fw-bold text-info text-uppercase mb-1">Faturados Ativos</div>
+                    <div class="h4 mb-0 fw-bold text-gray-800">{{ total_faturados }}</div>
+                </div>
+                <i class="bi bi-person-badge fs-1 text-info opacity-50"></i>
             </div>
+            <a href="{% url 'core:faturado_list' %}?todos=1" class="small text-info text-decoration-none mt-2 d-inline-block">Listar todos &rarr;</a>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-custom p-3 border-start border-4 border-warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs fw-bold text-warning text-uppercase mb-1">Tipos de Despesa</div>
+                    <div class="h4 mb-0 fw-bold text-gray-800">{{ total_despesas }}</div>
+                </div>
+                <i class="bi bi-tags fs-1 text-warning opacity-50"></i>
+            </div>
+            <a href="{% url 'core:despesa_list' %}?todos=1" class="small text-warning text-decoration-none mt-2 d-inline-block">Listar todas &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card-custom p-3 border-start border-4 border-danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs fw-bold text-danger text-uppercase mb-1">Total a Pagar (Contas Ativas)</div>
+                    <div class="h4 mb-0 fw-bold text-danger">R$ {{ total_pagar_valor|floatformat:2 }}</div>
+                </div>
+                <i class="bi bi-arrow-up-circle fs-1 text-danger opacity-50"></i>
+            </div>
+            <a href="{% url 'core:contas_pagar_list' %}?todos=1" class="small text-danger text-decoration-none mt-2 d-inline-block">Gerenciar Contas a Pagar &rarr;</a>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card-custom p-3 border-start border-4 border-success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs fw-bold text-success text-uppercase mb-1">Total a Receber (Contas Ativas)</div>
+                    <div class="h4 mb-0 fw-bold text-success">R$ {{ total_receber_valor|floatformat:2 }}</div>
+                </div>
+                <i class="bi bi-arrow-down-circle fs-1 text-success opacity-50"></i>
+            </div>
+            <a href="{% url 'core:contas_receber_list' %}?todos=1" class="small text-success text-decoration-none mt-2 d-inline-block">Gerenciar Contas a Receber &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<!-- Destaque do Extrator de NF (IA) -->
+<div class="card-custom p-4 text-white mb-4" style="background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%);">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h4 class="fw-bold mb-2"><i class="bi bi-robot text-warning me-2"></i> Extrator de Notas Fiscais com Gemini (IA)</h4>
+            <p class="mb-0 text-white-50">
+                Faça o upload do PDF de uma Nota Fiscal, extraia automaticamente todos os dados estruturados e consulte em tempo real a existência de Fornecedor, Faturado e Despesa para lançamento direto no Banco de Dados!
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'extrator:index' %}" class="btn btn-warning btn-lg fw-bold px-4">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Abrir Extrator IA
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Últimas Contas a Pagar Cadastradas -->
+<div class="card-custom">
+    <div class="card-custom-header">
+        <span><i class="bi bi-clock-history me-1"></i> Últimas Contas a Pagar Registradas</span>
+        <a href="{% url 'core:contas_pagar_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle"></i> Nova Conta a Pagar
+        </a>
+    </div>
+    <div class="card-custom-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-custom mb-0">
+                <thead>
+                    <tr>
+                        <th>NF</th>
+                        <th>Fornecedor</th>
+                        <th>Data Emissão</th>
+                        <th>Valor Total</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conta in ultimas_contas_pagar %}
+                        <tr>
+                            <td><strong>{{ conta.numero_nota_fiscal }}</strong></td>
+                            <td>{{ conta.fornecedor.razao_social }}</td>
+                            <td>{{ conta.data_emissao|date:"d/m/Y" }}</td>
+                            <td class="fw-bold text-danger">R$ {{ conta.valor_total|floatformat:2 }}</td>
+                            <td><span class="badge badge-status-ativo">ATIVO</span></td>
+                            <td>
+                                <a href="{% url 'core:contas_pagar_update' conta.pk %}" class="btn btn-sm btn-outline-primary btn-action">Editar</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                Nenhuma conta a pagar registrada ainda.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
