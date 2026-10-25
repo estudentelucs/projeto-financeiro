@@ -5,7 +5,7 @@ from django.conf import settings
 
 def git_info(request):
     """Disponibiliza o código da última atualização do GitHub e dados do sistema em todos os templates."""
-    commit_hash = '4bfcd0e'
+    commit_hash = '4b0d3f8'
     try:
         repo_dir = settings.BASE_DIR
         output = subprocess.check_output(
