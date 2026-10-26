@@ -59,9 +59,14 @@
                     {% if not carregou %}
                         <tr>
                             <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-search fs-2 d-block mb-2 text-secondary opacity-50"></i>
-                                Tabela de registros vazia.<br>
-                                Utilize a <strong>Busca</strong> acima ou clique no botão <strong>"Todos"</strong> para carregar os registros ativos.
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                                <span class="fw-bold fs-6 text-dark d-block mb-1">Tabela de registros vazia</span>
+                                <small>Conforme regra de layout, utilize a <strong>Busca</strong> acima ou clique no botão abaixo para carregar os registros ativos:</small>
+                                <div class="mt-3">
+                                    <a href="{% url 'core:faturado_list' %}?todos=1" class="btn btn-success btn-sm px-3">
+                                        <i class="bi bi-list-check me-1"></i> Carregar Todos os Faturados Ativos
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     {% elif faturados %}

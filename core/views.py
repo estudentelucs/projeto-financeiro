@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -121,7 +122,9 @@ def fornecedor_create(request):
             obj.ativo = True
             obj.save()
             messages.success(request, f'Fornecedor "{obj.razao_social}" cadastrado com sucesso!')
-            return redirect('core:fornecedor_list')
+            return redirect(f"{reverse('core:fornecedor_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao salvar. Por favor, verifique os campos obrigatórios e se o CNPJ já está cadastrado.')
     else:
         form = FornecedorForm()
     return render(request, 'core/fornecedor_form.html', {'form': form, 'titulo': 'Novo Fornecedor'})
@@ -136,7 +139,9 @@ def fornecedor_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Fornecedor "{obj.razao_social}" atualizado com sucesso!')
-            return redirect('core:fornecedor_list')
+            return redirect(f"{reverse('core:fornecedor_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao atualizar. Por favor, verifique os dados informados.')
     else:
         form = FornecedorForm(instance=obj)
     return render(request, 'core/fornecedor_form.html', {'form': form, 'titulo': f'Editar Fornecedor: {obj.razao_social}', 'objeto': obj})
@@ -148,7 +153,7 @@ def fornecedor_delete(request, pk):
     obj = get_object_or_404(Fornecedor, pk=pk)
     obj.inativar()
     messages.warning(request, f'Fornecedor "{obj.razao_social}" foi INATIVADO com sucesso (Exclusão Lógica).')
-    return redirect('core:fornecedor_list')
+    return redirect(f"{reverse('core:fornecedor_list')}?todos=1")
 
 
 @login_required
@@ -156,7 +161,7 @@ def fornecedor_reativar(request, pk):
     obj = get_object_or_404(Fornecedor, pk=pk)
     obj.reativar()
     messages.success(request, f'Fornecedor "{obj.razao_social}" foi REATIVADO com sucesso!')
-    return redirect('core:fornecedor_list')
+    return redirect(f"{reverse('core:fornecedor_list')}?todos=1")
 
 
 # ==========================================================
@@ -208,7 +213,9 @@ def cliente_create(request):
             obj.ativo = True
             obj.save()
             messages.success(request, f'Cliente "{obj.nome_completo}" cadastrado com sucesso!')
-            return redirect('core:cliente_list')
+            return redirect(f"{reverse('core:cliente_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao salvar cliente. Verifique se o CPF/CNPJ já foi cadastrado.')
     else:
         form = ClienteForm()
     return render(request, 'core/cliente_form.html', {'form': form, 'titulo': 'Novo Cliente'})
@@ -222,7 +229,9 @@ def cliente_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Cliente "{obj.nome_completo}" atualizado com sucesso!')
-            return redirect('core:cliente_list')
+            return redirect(f"{reverse('core:cliente_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao atualizar cliente.')
     else:
         form = ClienteForm(instance=obj)
     return render(request, 'core/cliente_form.html', {'form': form, 'titulo': f'Editar Cliente: {obj.nome_completo}', 'objeto': obj})
@@ -233,7 +242,7 @@ def cliente_delete(request, pk):
     obj = get_object_or_404(Cliente, pk=pk)
     obj.inativar()
     messages.warning(request, f'Cliente "{obj.nome_completo}" foi INATIVADO com sucesso (Exclusão Lógica).')
-    return redirect('core:cliente_list')
+    return redirect(f"{reverse('core:cliente_list')}?todos=1")
 
 
 @login_required
@@ -241,7 +250,7 @@ def cliente_reativar(request, pk):
     obj = get_object_or_404(Cliente, pk=pk)
     obj.reativar()
     messages.success(request, f'Cliente "{obj.nome_completo}" foi REATIVADO com sucesso!')
-    return redirect('core:cliente_list')
+    return redirect(f"{reverse('core:cliente_list')}?todos=1")
 
 
 # ==========================================================
@@ -292,7 +301,9 @@ def faturado_create(request):
             obj.ativo = True
             obj.save()
             messages.success(request, f'Faturado "{obj.nome_completo}" cadastrado com sucesso!')
-            return redirect('core:faturado_list')
+            return redirect(f"{reverse('core:faturado_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao salvar faturado. Verifique se o CPF já está cadastrado.')
     else:
         form = FaturadoForm()
     return render(request, 'core/faturado_form.html', {'form': form, 'titulo': 'Novo Faturado'})
@@ -306,7 +317,9 @@ def faturado_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Faturado "{obj.nome_completo}" atualizado com sucesso!')
-            return redirect('core:faturado_list')
+            return redirect(f"{reverse('core:faturado_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao atualizar faturado.')
     else:
         form = FaturadoForm(instance=obj)
     return render(request, 'core/faturado_form.html', {'form': form, 'titulo': f'Editar Faturado: {obj.nome_completo}', 'objeto': obj})
@@ -317,7 +330,7 @@ def faturado_delete(request, pk):
     obj = get_object_or_404(Faturado, pk=pk)
     obj.inativar()
     messages.warning(request, f'Faturado "{obj.nome_completo}" foi INATIVADO com sucesso (Exclusão Lógica).')
-    return redirect('core:faturado_list')
+    return redirect(f"{reverse('core:faturado_list')}?todos=1")
 
 
 @login_required
@@ -325,7 +338,7 @@ def faturado_reativar(request, pk):
     obj = get_object_or_404(Faturado, pk=pk)
     obj.reativar()
     messages.success(request, f'Faturado "{obj.nome_completo}" foi REATIVADO com sucesso!')
-    return redirect('core:faturado_list')
+    return redirect(f"{reverse('core:faturado_list')}?todos=1")
 
 
 # ==========================================================
@@ -375,7 +388,9 @@ def despesa_create(request):
             obj.ativo = True
             obj.save()
             messages.success(request, f'Tipo de Despesa "{obj.categoria} - {obj.nome}" cadastrado com sucesso!')
-            return redirect('core:despesa_list')
+            return redirect(f"{reverse('core:despesa_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao salvar tipo de despesa. Verifique se o nome já existe.')
     else:
         form = TipoDespesaForm()
     return render(request, 'core/despesa_form.html', {'form': form, 'titulo': 'Novo Tipo de Despesa'})
@@ -389,7 +404,9 @@ def despesa_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Tipo de Despesa "{obj.nome}" atualizado com sucesso!')
-            return redirect('core:despesa_list')
+            return redirect(f"{reverse('core:despesa_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao atualizar tipo de despesa.')
     else:
         form = TipoDespesaForm(instance=obj)
     return render(request, 'core/despesa_form.html', {'form': form, 'titulo': f'Editar Tipo de Despesa: {obj.nome}', 'objeto': obj})
@@ -400,7 +417,7 @@ def despesa_delete(request, pk):
     obj = get_object_or_404(TipoDespesa, pk=pk)
     obj.inativar()
     messages.warning(request, f'Tipo de Despesa "{obj.nome}" foi INATIVADO com sucesso (Exclusão Lógica).')
-    return redirect('core:despesa_list')
+    return redirect(f"{reverse('core:despesa_list')}?todos=1")
 
 
 @login_required
@@ -408,7 +425,7 @@ def despesa_reativar(request, pk):
     obj = get_object_or_404(TipoDespesa, pk=pk)
     obj.reativar()
     messages.success(request, f'Tipo de Despesa "{obj.nome}" foi REATIVADO com sucesso!')
-    return redirect('core:despesa_list')
+    return redirect(f"{reverse('core:despesa_list')}?todos=1")
 
 
 # ==========================================================
@@ -457,7 +474,9 @@ def receita_create(request):
             obj.ativo = True
             obj.save()
             messages.success(request, f'Tipo de Receita "{obj.nome}" cadastrado com sucesso!')
-            return redirect('core:receita_list')
+            return redirect(f"{reverse('core:receita_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao salvar tipo de receita. Verifique se o nome já existe.')
     else:
         form = TipoReceitaForm()
     return render(request, 'core/receita_form.html', {'form': form, 'titulo': 'Novo Tipo de Receita'})
@@ -471,7 +490,9 @@ def receita_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Tipo de Receita "{obj.nome}" atualizado com sucesso!')
-            return redirect('core:receita_list')
+            return redirect(f"{reverse('core:receita_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao atualizar tipo de receita.')
     else:
         form = TipoReceitaForm(instance=obj)
     return render(request, 'core/receita_form.html', {'form': form, 'titulo': f'Editar Tipo de Receita: {obj.nome}', 'objeto': obj})
@@ -482,7 +503,7 @@ def receita_delete(request, pk):
     obj = get_object_or_404(TipoReceita, pk=pk)
     obj.inativar()
     messages.warning(request, f'Tipo de Receita "{obj.nome}" foi INATIVADO com sucesso (Exclusão Lógica).')
-    return redirect('core:receita_list')
+    return redirect(f"{reverse('core:receita_list')}?todos=1")
 
 
 @login_required
@@ -490,7 +511,7 @@ def receita_reativar(request, pk):
     obj = get_object_or_404(TipoReceita, pk=pk)
     obj.reativar()
     messages.success(request, f'Tipo de Receita "{obj.nome}" foi REATIVADO com sucesso!')
-    return redirect('core:receita_list')
+    return redirect(f"{reverse('core:receita_list')}?todos=1")
 
 
 # ==========================================================
@@ -554,7 +575,9 @@ def contas_pagar_create(request):
             )
 
             messages.success(request, f'Conta a Pagar NF {obj.numero_nota_fiscal} registrada com sucesso!')
-            return redirect('core:contas_pagar_list')
+            return redirect(f"{reverse('core:contas_pagar_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao registrar conta a pagar. Verifique os campos informados.')
     else:
         form = ContasPagarForm()
     return render(request, 'core/contas_pagar_form.html', {'form': form, 'titulo': 'Registrar Conta a Pagar'})
@@ -568,7 +591,9 @@ def contas_pagar_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Conta a Pagar NF {obj.numero_nota_fiscal} atualizada com sucesso!')
-            return redirect('core:contas_pagar_list')
+            return redirect(f"{reverse('core:contas_pagar_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao atualizar conta a pagar.')
     else:
         form = ContasPagarForm(instance=obj)
     return render(request, 'core/contas_pagar_form.html', {'form': form, 'titulo': f'Editar Conta a Pagar: NF {obj.numero_nota_fiscal}', 'objeto': obj})
@@ -579,7 +604,7 @@ def contas_pagar_delete(request, pk):
     obj = get_object_or_404(ContasPagar, pk=pk)
     obj.inativar()
     messages.warning(request, f'Conta a Pagar NF "{obj.numero_nota_fiscal}" foi INATIVADA com sucesso (Exclusão Lógica).')
-    return redirect('core:contas_pagar_list')
+    return redirect(f"{reverse('core:contas_pagar_list')}?todos=1")
 
 
 @login_required
@@ -587,7 +612,7 @@ def contas_pagar_reativar(request, pk):
     obj = get_object_or_404(ContasPagar, pk=pk)
     obj.reativar()
     messages.success(request, f'Conta a Pagar NF "{obj.numero_nota_fiscal}" foi REATIVADA com sucesso!')
-    return redirect('core:contas_pagar_list')
+    return redirect(f"{reverse('core:contas_pagar_list')}?todos=1")
 
 
 # ==========================================================
@@ -648,7 +673,9 @@ def contas_receber_create(request):
             )
 
             messages.success(request, f'Conta a Receber Doc {obj.numero_documento} registrada com sucesso!')
-            return redirect('core:contas_receber_list')
+            return redirect(f"{reverse('core:contas_receber_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao registrar conta a receber. Verifique os dados informados.')
     else:
         form = ContasReceberForm()
     return render(request, 'core/contas_receber_form.html', {'form': form, 'titulo': 'Registrar Conta a Receber'})
@@ -662,7 +689,9 @@ def contas_receber_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'Conta a Receber Doc {obj.numero_documento} atualizada com sucesso!')
-            return redirect('core:contas_receber_list')
+            return redirect(f"{reverse('core:contas_receber_list')}?todos=1")
+        else:
+            messages.error(request, 'Erro ao atualizar conta a receber.')
     else:
         form = ContasReceberForm(instance=obj)
     return render(request, 'core/contas_receber_form.html', {'form': form, 'titulo': f'Editar Conta a Receber: Doc {obj.numero_documento}', 'objeto': obj})
@@ -673,7 +702,7 @@ def contas_receber_delete(request, pk):
     obj = get_object_or_404(ContasReceber, pk=pk)
     obj.inativar()
     messages.warning(request, f'Conta a Receber Doc "{obj.numero_documento}" foi INATIVADA com sucesso (Exclusão Lógica).')
-    return redirect('core:contas_receber_list')
+    return redirect(f"{reverse('core:contas_receber_list')}?todos=1")
 
 
 @login_required
@@ -681,4 +710,4 @@ def contas_receber_reativar(request, pk):
     obj = get_object_or_404(ContasReceber, pk=pk)
     obj.reativar()
     messages.success(request, f'Conta a Receber Doc "{obj.numero_documento}" foi REATIVADA com sucesso!')
-    return redirect('core:contas_receber_list')
+    return redirect(f"{reverse('core:contas_receber_list')}?todos=1")
