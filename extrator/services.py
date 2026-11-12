@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from google import genai
 from google.genai import types
 
@@ -105,34 +106,17 @@ IMPORTANTE:
         mime_type='application/pdf'
     )
 
-    # Obter lista de modelos válidos diretamente da API do Gemini
-    modelos_disponiveis = []
-    try:
-        for m in client.models.list():
-            nome = getattr(m, 'name', '') or ''
-            # Filtrar modelos Gemini que suportam geração de conteúdo
-            if 'gemini' in nome.lower() and ('flash' in nome.lower() or 'pro' in nome.lower()):
-                modelos_disponiveis.append(nome)
-    except Exception:
-        pass
-
-    # Fallback se a listagem não retornar
-    if not modelos_disponiveis:
-        modelos_disponiveis = ['gemini-2.5-flash', 'gemini-2.0-flash']
-
-    # Priorizar modelos Flash
-    modelos_candidatos = sorted(
-        modelos_disponiveis,
-        key=lambda x: (0 if '2.5-flash' in x else (1 if '2.0-flash' in x else (2 if 'flash' in x else 3)))
-    )
+    # Modelos estáveis com cota ativa e sem alta demanda (503/404)
+    modelos_candidatos = [
+        'gemini-3.1-flash-lite',
+        'gemini-3.1-flash-lite-preview',
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-3.8-flash',
+    ]
 
     response = None
     erros_ocorridos = []
-
-    config = types.GenerateContentConfig(
-        response_mime_type="application/json",
-        temperature=0.1,
-    )
 
     for modelo in modelos_candidatos:
         try:
@@ -141,33 +125,41 @@ IMPORTANTE:
                 contents=[
                     prompt,
                     pdf_part
-                ],
-                config=config
+                ]
             )
             if response and response.text:
                 break
         except Exception as e:
             erros_ocorridos.append(f'{modelo}: {str(e)}')
             import time
-            time.sleep(0.5)
+            time.sleep(0.3)
 
     if not response or not response.text:
         raise ValueError(f'Não foi possível extrair os dados. Detalhes: {erros_ocorridos[-1] if erros_ocorridos else "Sem resposta"}')
 
     texto_resposta = response.text.strip()
 
-    # Limpar possíveis markers de código
-    if texto_resposta.startswith('```json'):
-        texto_resposta = texto_resposta[7:]
-    if texto_resposta.startswith('```'):
-        texto_resposta = texto_resposta[3:]
-    if texto_resposta.endswith('```'):
-        texto_resposta = texto_resposta[:-3]
-    texto_resposta = texto_resposta.strip()
+    # Limpar possíveis markers de código e extrair bloco JSON
+    if '```' in texto_resposta:
+        match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', texto_resposta)
+        if match:
+            texto_resposta = match.group(1).strip()
+        else:
+            texto_resposta = re.sub(r'^```[a-zA-Z]*\n', '', texto_resposta)
+            texto_resposta = re.sub(r'\n```$', '', texto_resposta).strip()
 
     try:
         dados = json.loads(texto_resposta)
     except json.JSONDecodeError as e:
-        raise ValueError(f'Erro ao processar resposta do Gemini. Resposta recebida: {texto_resposta[:500]}... Erro: {str(e)}')
+        # Tenta localizar primeiro { e último }
+        inicio = texto_resposta.find('{')
+        fim = texto_resposta.rfind('}')
+        if inicio != -1 and fim != -1 and fim > inicio:
+            try:
+                dados = json.loads(texto_resposta[inicio:fim+1])
+            except Exception:
+                raise ValueError(f'Erro ao processar resposta do Gemini. Resposta recebida: {texto_resposta[:500]}... Erro: {str(e)}')
+        else:
+            raise ValueError(f'Erro ao processar resposta do Gemini. Resposta recebida: {texto_resposta[:500]}... Erro: {str(e)}')
 
     return dados

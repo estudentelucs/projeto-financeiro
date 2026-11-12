@@ -415,7 +415,13 @@
             body: formData
         })
         .then(function(response) {
-            return response.json().then(function(data) {
+            return response.text().then(function(text) {
+                var data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('O servidor retornou uma resposta inesperada (Status ' + response.status + ').');
+                }
                 if (!response.ok) {
                     throw new Error(data.erro || 'Erro ao processar a nota fiscal.');
                 }
